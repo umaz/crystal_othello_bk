@@ -3,36 +3,50 @@ require "./board"
 require "./human"
 require "./com"
 
+
 class Game
-  def initialize(mode, order, lv)
-    case mode
-    when COM
-      case order
-      when FIRST
-        @first = Human.new(BLACK)
-        @second = Com.new(WHITE, lv)
-      when SECOND
-        @first = Com.new(BLACK, lv)
-        @second = Human.new(WHITE)
-      end
-    when HUMAN
+  @turn = 0
+  @record = {} of Int32 => Tuple(Array(Int32), Com | Human, Array(Array(Int32)))
+  @board = Board.new
+
+  def initialize(order, lv : Int32)
+    case order
+    when FIRST
+      @first = Human.new(BLACK)
+      @second = Com.new(WHITE, lv)
+    when SECOND
+      @first = Com.new(BLACK, lv)
+      @second = Human.new(WHITE)
+    else
       @first = Human.new(BLACK)
       @second = Human.new(WHITE)
-    when WATCH
-      @first = Com.new(BLACK, lv[0])
-      @second = Com.new(WHITE, lv[1])
     end
-    @turn = 0
-    @record = Hash.new
     @player = @first #黒石からスタート
-    @board = Board.new
+    start()
+  end
+
+  def initialize()
+    @first = Human.new(BLACK)
+    @second = Human.new(WHITE)
+    @player = @first #黒石からスタート
+    start()
+  end
+
+  def initialize(lv : Array(Int32))
+    @first = Com.new(BLACK, lv[0])
+    @second = Com.new(WHITE, lv[1])
+    @player = @first #黒石からスタート
+    start()
+  end
+
+  def start()
     @board.show_board
     phase
   end
 
-  attr_reader :player
-  attr_reader :turn
-  attr_reader :record
+  getter :player
+  getter :turn
+  getter :record
 
   #手番の流れ
   def phase
@@ -49,13 +63,8 @@ class Game
       putable_cells = @board.get_putable_cells(@player.color)
       print("#{COLOR[@player.color]}の手番です\n")
       print("#{@turn+1}手目:")
-      case @player
-      when Human
-        move = @player.put_stone(putable_cells)
-      when Com
-        move = @player.put_stone(self, @board)
-      end
-      reverse(move)
+      move = @player.put_stone(self, @board, putable_cells)
+      reverse(move.as(Array(Int32)))
       @board.show_board
       phase
     end
@@ -75,11 +84,11 @@ class Game
     end
   end
 
-  def reverse(move)
+  def reverse(move : Array(Int32))
     row = move[0].to_i
     col = move[1].to_i
     change = @board.reverse(row, col, @player.color)
-    @record[@turn] = [move, @player, change]
+    @record[@turn] = {move, @player, change}
     @turn += 1
     change_phase
   end

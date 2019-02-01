@@ -2,12 +2,13 @@ require "./constant"
 require "./player"
 
 class Com < Player
-  def initialize(color, lv)
+  def initialize(color : Int32, lv : Int32)
     super(color) #親クラスのメソッド呼び出し
     @lv = lv
   end
 
-  def put_stone(game, board)
+  def put_stone(game, board, putable_cells)
+    cell = [0, 0]
     case @lv
     when 1
       cell = lv1(game, board)
@@ -20,8 +21,8 @@ class Com < Player
     when 5
       cell = lv5(game, board)
     end
-    row = ROW_NUM.key(cell[0])
-    col = COL_NUM.key(cell[1])
+    row = ROW_NUM.invert[cell[0]]
+    col = COL_NUM.invert[cell[1]]
     move = col + row
     print(game.turn+1, "手目: ", move)
     return cell
@@ -36,11 +37,11 @@ class Com < Player
 
   #BOARD_SCOREのもっとも大きくなるマスに石を打つ
   def lv2(game, board)
-    cell_score = {-9999999999 => [[0,0]]}
+    cell_score = {-99999999 => [[0,0]]}
     putable_cells = board.get_putable_cells(game.player.color)
     print(cell_list(putable_cells), "\n")
     putable_cells.each do |cell|
-      print(COL_NUM.key(cell[1]) + ROW_NUM.key(cell[0]), ": ", BOARD_SCORE[cell[0]][cell[1]], "\n")
+      print(COL_NUM.invert[cell[1]] + ROW_NUM.invert[cell[0]], ": ", BOARD_SCORE[cell[0]][cell[1]], "\n")
       score = BOARD_SCORE[cell[0]][cell[1]]
       if score > cell_score.keys.last
         cell_score[score] = [cell]
@@ -53,7 +54,7 @@ class Com < Player
   end
 
   def lv3(game, board)
-    cell_score = {-9999999999 => [[0,0]]}
+    cell_score = {-99999999 => [[0,0]]}
     putable_cells = board.get_putable_cells(game.player.color)
     print(cell_list(putable_cells), "\n")
     putable_cells.each do |cell|
@@ -66,7 +67,7 @@ class Com < Player
           end
         end
       end
-      print(COL_NUM.key(cell[1]) + ROW_NUM.key(cell[0]), ": ", score, "\n")
+      print(COL_NUM.invert[cell[1]] + ROW_NUM.invert[cell[0]], ": ", score, "\n")
       game.undo
       if score > cell_score.keys.last
         cell_score[score] = [cell]
@@ -79,8 +80,8 @@ class Com < Player
   end
 
   def lv4(game, board)
-    cell_score = {-9999999999 => [[0,0]]}
-    depth = 3 #先読みの深さ
+    cell_score = {-99999999 => [[0,0]]}
+    depth = 5 #先読みの深さ
     putable_cells = board.get_putable_cells(game.player.color)
     print(cell_list(putable_cells), "\n")
     putable_cells.each do |cell|
@@ -90,12 +91,12 @@ class Com < Player
       else
         score = search(game, board, depth-1, BOARD)
       end
-      print(COL_NUM.key(cell[1]) + ROW_NUM.key(cell[0]), ": ", score, "\n")
+      print(COL_NUM.invert[cell[1]] + ROW_NUM.invert[cell[0]], ": ", score, "\n")
       game.undo
-      if score > cell_score.keys.last
-        cell_score[score] = [cell]
+      if score.to_s.to_i > cell_score.keys.last
+        cell_score[score.to_s.to_i] = [cell]
       elsif score == cell_score.keys.last
-        cell_score[score].push(cell)
+        cell_score[score.to_s.to_i].push(cell)
       end
     end
     put_cell = select_com_move(cell_score)
@@ -103,8 +104,8 @@ class Com < Player
   end
 
   def lv5(game, board)
-    cell_score = {-9999999999 => [[0,0]]}
-    depth = 3 #先読みの深さ
+    cell_score = {-99999999 => [[0,0]]}
+    depth = 5 #先読みの深さ
     putable_cells = board.get_putable_cells(game.player.color)
     print(cell_list(putable_cells), "\n")
     putable_cells.each do |cell|
@@ -112,18 +113,18 @@ class Com < Player
       if depth == 0 || game.status == FINISH
         score = perfect_score(game, board)
       else
-        if game.turn > 48
+        if game.turn > 47
           score = search(game, board, 99, PERFECT)
         else
           score = search(game, board, depth-1, BOARD)
         end
       end
-      print(COL_NUM.key(cell[1]) + ROW_NUM.key(cell[0]), ": ", score, "\n")
+      print(COL_NUM.invert[cell[1]] + ROW_NUM.invert[cell[0]], ": ", score, "\n")
       game.undo
-      if score > cell_score.keys.last
-        cell_score[score] = [cell]
+      if score.to_s.to_i > cell_score.keys.last
+        cell_score[score.to_s.to_i] = [cell]
       elsif score == cell_score.keys.last
-        cell_score[score].push(cell)
+        cell_score[score.to_s.to_i].push(cell)
       end
     end
     put_cell = select_com_move(cell_score)
@@ -150,11 +151,11 @@ class Com < Player
       if minmax == 9999
         minmax = score
       elsif game.player.color == @color
-        if score > minmax
+        if score.to_s.to_i > minmax.to_s.to_i
           minmax = score
         end
       else
-        if score < minmax
+        if score.to_s.to_i < minmax.to_s.to_i
           minmax = score
         end
       end
@@ -185,7 +186,7 @@ class Com < Player
   def cell_list(putable_cells)
     cell_list = "" #着手可能場所の一覧
     putable_cells.each do |cell|
-      cell_list += "(" + COL_NUM.key(cell[1]) + ROW_NUM.key(cell[0]) + ")"
+      cell_list += "(" + COL_NUM.invert[cell[1]] + ROW_NUM.invert[cell[0]] + ")"
     end
     return cell_list
   end

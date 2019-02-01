@@ -1,6 +1,8 @@
 class Player
-  def initialize(color)
+  def initialize(color : Int32)
     @color = color
   end
-  attr_reader :color
+  def put_stone(game, board, putable_cells)
+  end
+  getter :color
 end

@@ -18,26 +18,28 @@ class Board
     ]
   end
 
-  attr_reader :board
+  getter :board
 
   #現在の盤の状態を表示
   def show_board
     print("\n\n  #{COL_NUM.keys.join(" ")}\n") #列
-    @board.slice(1...-1).each_with_index do |row, i| #番兵を除く
-      print(ROW_NUM[(i+1).to_s])
-      row.each do |col|
-        case col
-        when EMPTY
-          print "\e[32m"
-          print(" □")
-          print "\e[0m"
-        when BLACK
-          print(" ○")
-        when WHITE
-          print(" ●")
+    @board.each_with_index do |row, i|
+      if i > 0 && i < 9
+        print(ROW_NUM[(i).to_s])
+        row.each do |col|
+          case col
+          when EMPTY
+            print "\e[32m"
+            print(" □")
+            print "\e[0m"
+          when BLACK
+            print(" ○")
+          when WHITE
+            print(" ●")
+          end
         end
+        print("\n")
       end
-      print("\n")
     end
     print("\n")
     stone_count = count
@@ -48,7 +50,7 @@ class Board
   def reverse(row, col, color) #石をおいた位置
     @board[row][col] = color
     turn_direction = turnable_direction(row, col, color) #返せる方向を取得
-    turned_cells = [] #返す方向と返した枚数
+    turned_cells = [] of Array(Int32)#返す方向と返した枚数
     if turn_direction & UPPER_LEFT != 0
       i = 1
       while @board[row-i][col-i] == -color #相手の色が続くまで
@@ -197,7 +199,7 @@ class Board
 
   #ひっくり返せるマスの一覧を取得
   def get_putable_cells(color)
-    putable_cells = []
+    putable_cells = [] of Array(Int32)
     @board.each_with_index do |row, i|
       row.each_with_index do |col, j|
         if col == EMPTY #空きマス

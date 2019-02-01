@@ -6,11 +6,11 @@ result = [0,0,0] #1回目
 reverse_result = [0,0,0] #入れ替え後
 
 print("AI1:")
-first = gets.chomp.to_i
+first = gets.to_s.chomp.to_i
 print("AI2:")
-second = gets.chomp.to_i
+second = gets.to_s.chomp.to_i
 print("対局回数:")
-n = gets.chomp!.to_i
+n = gets.to_s.chomp!.to_i
 
 benchmark = Benchmark.measure do
   n.times do
